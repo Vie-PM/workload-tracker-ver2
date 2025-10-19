@@ -70,6 +70,13 @@ export const useTimeTracker = (showAlert: (message: string, type?: 'success' | '
             return;
         }
 
+        // SAFETY CHECK: Ensure Google GSI script is loaded
+        if (typeof google === 'undefined' || !google.accounts) {
+            showAlert('Google Sign-In is not ready. Please wait a moment and try again.', 'error');
+            console.error("Google GSI script has not been loaded or initialized yet.");
+            return;
+        }
+
         try {
             tokenClient.current = google.accounts.oauth2.initTokenClient({
                 client_id: settings.clientId,
@@ -88,7 +95,7 @@ export const useTimeTracker = (showAlert: (message: string, type?: 'success' | '
             tokenClient.current.requestAccessToken();
         } catch(e) {
             console.error(e);
-            showAlert('Google Sign-In script not loaded. Please refresh the page.', 'error');
+            showAlert('An unexpected error occurred during Google Sign-In.', 'error');
             setAuthState('error');
         }
 
@@ -238,6 +245,14 @@ export const useTimeTracker = (showAlert: (message: string, type?: 'success' | '
         
         // Let's implement a quick-and-dirty token grab
         const getTokenAndAppend = () => new Promise<void>((resolve) => {
+            if (typeof google === 'undefined' || !google.accounts) {
+                showAlert('Google Sign-In is not ready. Session saved locally.', 'warning');
+                const newOffline = [...offlineSessions, newSession];
+                storage.saveOfflineSessions(newOffline);
+                setOfflineSessions(newOffline);
+                resolve();
+                return;
+            }
             tokenClient.current = google.accounts.oauth2.initTokenClient({
                 client_id: settings.clientId,
                 scope: 'https://www.googleapis.com/auth/spreadsheets',
@@ -254,6 +269,11 @@ export const useTimeTracker = (showAlert: (message: string, type?: 'success' | '
                            storage.saveOfflineSessions(newOffline);
                            setOfflineSessions(newOffline);
                        }
+                    } else {
+                         showAlert('Could not get authorization. Session saved locally.', 'warning');
+                         const newOffline = [...offlineSessions, newSession];
+                         storage.saveOfflineSessions(newOffline);
+                         setOfflineSessions(newOffline);
                     }
                     resolve();
                 },
