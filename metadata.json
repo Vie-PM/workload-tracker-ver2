@@ -1,0 +1,5 @@
+{
+  "name": "React Time Tracker_APP by Gemini & Claude",
+  "description": "A comprehensive time tracking application built with React and Tailwind CSS. It allows users to manage projects, track time spent on each task, view daily statistics, and generate reports. All data is saved locally in the browser.",
+  "requestFramePermissions": []
+}
